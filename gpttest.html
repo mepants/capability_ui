@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pivot Table with Associations and Properties</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <style>
+        /* Overall Layout */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #top-frame, #bottom-frame {
+            width: 100%;
+            border: none;
+            padding: 20px;
+        }
+
+        #top-frame {
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        #bottom-frame {
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .dropdown-container, .list-box-container, .properties-box {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        /* Styling for the Table */
+        #pivotTable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #pivotTable thead {
+            background-color: #007bff;
+            color: white;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        #pivotTable tbody tr {
+            border-bottom: 1px solid #ddd;
+        }
+
+        #pivotTable tbody tr:hover {
+            background-color: #e6f7ff;
+            cursor: pointer;
+        }
+
+        #pivotTable tbody td {
+            padding: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* Dropdown Styling */
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        /* Associations List Styling */
+        .list-box-container {
+            background-color: #fafafa;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .list-item:hover {
+            background-color: #f0f8ff;
+        }
+
+        .list-item.selected {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+
+        .associated {
+            color: #333;
+        }
+
+        .unassociated {
+            color: #999;
+        }
+
+        .action-btn {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .action-btn:hover {
+            color: #333;
+        }
+
+        /* Properties Box Styling */
+        .properties-box {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .properties-box label {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .properties-box input, .properties-box select {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background-color: #fff;
+        }
+
+        .properties-box input[type="date"] {
+            padding: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="top-frame">
+    <table id="pivotTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Capability</th>
+                <th>London</th>
+                <th>Hong Kong</th>
+                <th>France</th>
+                <th>Indonesia</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Pricing</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>Booking</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>Settlement</td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div id="bottom-frame">
+    <div class="dropdown-container">
+        <h2>Details</h2>
+        <label for="subVS">Sub VS:</label>
+        <select id="subVS">
+            <option value="Cash" selected>Cash</option>
+            <option value="Options">Options</option>
+            <option value="Commodities">Commodities</option>
+        </select>
+
+        <label for="capability">Capability:</label>
+        <select id="capability">
+            <option value="">Select Capability</option>
+            <option value="Pricing">Pricing</option>
+            <option value="Booking">Booking</option>
+            <option value="Settlement">Settlement</option>
+        </select>
+
+        <label for="application">Application:</label>
+        <select id="application" disabled>
+            <option value="">Select Application</option>
+        </select>
+
+        <label for="region">Region:</label>
+        <select id="region">
+            <option value="">Select Region</option>
+            <option value="London">London</option>
+            <option value="Hong Kong">Hong Kong</option>
+            <option value="France">France</option>
+            <option value="Indonesia">Indonesia</option>
+        </select>
+    </div>
+
+    <div class="list-box-container">
+        <h2>Associations</h2>
+        <div id="associationList">
+            <!-- List items will be dynamically generated here -->
+        </div>
+    </div>
+
+    <div class="properties-box" id="propertiesBox">
+        <h2>Properties</h2>
+        <label for="property-start-date">Start Date:</label>
+        <input type="date" id="property-start-date">
+
+        <label for="property-end-date">End Date:</label>
+        <input type="date" id="property-end-date">
+
+        <label for="property-status">Strategic Status:</label>
+        <select id="property-status">
+            <option value="Strategic">Strategic</option>
+            <option value="Non-Strategic">Non-Strategic</option>
+            <option value="Demised">Demised</option>
+        </select>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        var table = $('#pivotTable').DataTable();
+        var selectedAssociationIndex = null;
+        var appNames = ["app1", "app2", "app3", "app4"];
+
+        $('#pivotTable tbody tr').each(function() {
+            $(this).find('td').each(function(index) {
+                if (index > 0) {
+                    var randomApp = appNames[Math.floor(Math.random() * appNames.length)];
+                    $(this).text(randomApp);
+                }
+            });
+        });
+
+        var associations = [
+            { name: "app1", associated: false, startDate: "", endDate: "", status: "Strategic" },
+            { name: "app2", associated: false, startDate: "", endDate: "", status: "Non-Strategic" },
+            { name: "app3", associated: false, startDate: "", endDate: "", status: "Demised" },
+            { name: "app4", associated: false, startDate: "", endDate: "", status: "Strategic" }
+        ];
+
+        function updateAssociationList() {
+            $('#associationList').empty();
+            associations.sort((a, b) => (b.associated - a.associated) || a.name.localeCompare(b.name));
+            associations.forEach((item, index) => {
+                var listItem = $('<div>').addClass('list-item')
+                    .addClass(item.associated ? 'associated' : 'unassociated')
+                    .toggleClass('selected', index === selectedAssociationIndex)
+                    .text(item.name);
+                var actionBtn = $('<button>').addClass('action-btn')
+                    .html(item.associated ? '&times;' : '+')
+                    .click(function(e) {
+                        e.stopPropagation();
+                        item.associated = !item.associated;
+                        updateAssociationList();
+                    });
+                listItem.append(actionBtn);
+                listItem.click(function() {
+                    if (item.associated) {
+                        selectedAssociationIndex = index;
+                        updatePropertiesBox(item);
+                        updateAssociationList();
+                    }
+                });
+                $('#associationList').append(listItem);
+            });
+        }
+
+        function updatePropertiesBox(item) {
+            $('#property-start-date').val(item.startDate);
+            $('#property-end-date').val(item.endDate);
+            $('#property-status').val(item.status);
+        }
+
+        function selectAssociationByName(name) {
+            selectedAssociationIndex = associations.findIndex(a => a.name === name && a.associated);
+            updateAssociationList();
+            if (selectedAssociationIndex >= 0) updatePropertiesBox(associations[selectedAssociationIndex]);
+        }
+
+        $('#pivotTable tbody').on('click', 'td', function() {
+            var cell = $(this);
+            var row = cell.closest('tr');
+            var capability = row.find('td:first').text();
+            var columnIdx = table.cell(cell).index().column;
+            var region = table.column(columnIdx).header().textContent;
+            var cellValue = cell.text();
+
+            $('#capability').val(capability);
+            $('#region').val(region);
+            selectAssociationByName(cellValue);
+        });
+
+        $('#capability, #region').change(function() {
+            var capability = $('#capability').val();
+            var region = $('#region').val();
+            if (capability && region) {
+                var cell = table.cell(function(idx, data, node) {
+                    return data[0] === capability;
+                }, table.columns().eq(0).filter(function(idx, data, node) {
+                    return table.column(idx).header().textContent === region;
+                }));
+                if (cell.length) selectAssociationByName(cell.data());
+            }
+        });
+
+        updateAssociationList();
+    });
+</script>
+
+</body>
+</html>
